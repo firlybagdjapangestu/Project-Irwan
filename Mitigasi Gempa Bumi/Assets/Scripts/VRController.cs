@@ -9,6 +9,7 @@ public class VRController : MonoBehaviour
     [SerializeField] private float moveSpeed = 3f; // Kecepatan gerak karakter
     [SerializeField] private Transform cameraTransform; // Transform kamera
     [SerializeField] private CharacterController characterController; // Komponen CharacterController
+    [SerializeField] private Animator playerAnimator;
 
     private bool isMoving; // Status pergerakan
 
@@ -30,9 +31,11 @@ public class VRController : MonoBehaviour
 
     private void MoveCharacter()
     {
+        playerAnimator.SetBool("IsWalk", false);
         if (!isMoving) return; // Jika tidak bergerak, keluar dari fungsi
 
         // Mengambil arah depan kamera dan menggerakkan karakter
+        playerAnimator.SetBool("IsWalk", true);
         Vector3 direction = cameraTransform.TransformDirection(Vector3.forward);
         characterController.Move(direction * moveSpeed * Time.deltaTime);
     }

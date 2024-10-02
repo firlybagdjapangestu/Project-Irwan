@@ -8,7 +8,7 @@ public class ScenerioScript : MonoBehaviour
 {
     public static ScenerioScript instance;
     public int step;
-    private IEnumerator[] skenarioList;
+    public IEnumerator[] skenarioList;
 
     [SerializeField] private AudioSource briefSource;
     [SerializeField] private AudioSource sfxSource;
@@ -25,21 +25,26 @@ public class ScenerioScript : MonoBehaviour
 
     private Vector3 originalPosition;
 
-    [SerializeField] private GameObject arrowSkenario2;
     [SerializeField] private Rigidbody papanTulis;
     [SerializeField] private Rigidbody lemari;
     [SerializeField] private Rigidbody meja;
+    [SerializeField] private GameObject safeTable;
 
     [SerializeField] private Light pointLight; // Ambil referensi ke lampu
     [SerializeField] private Collider keluarKelas;
+    [SerializeField] private GameObject arrow;
+    [SerializeField] private Animator arrowAnim;
+    [SerializeField] private GameObject menuPanel;
     // Start is called before the first frame update
     void Start()
     {
-        skenarioList = new IEnumerator[4];
+        skenarioList = new IEnumerator[6];
         skenarioList[0] = Skenario1();
         skenarioList[1] = Skenario2();
         skenarioList[2] = Skenario3();
         skenarioList[3] = Skenario4();
+        skenarioList[4] = Skenario5();
+        skenarioList[5] = Skenario6();
 
         StartCoroutine(skenarioList[step]);
         instance = this;
@@ -74,10 +79,9 @@ public class ScenerioScript : MonoBehaviour
     {
         textInformation.text = "Dengarkan instruksi, Anda belum bisa bergerak. Setelah instruksi selesai, Anda bisa bergerak dengan cara menundukkan pandangan.";
         keyboardController.enabled = false;
-
+        vrController.enabled = false;
         BriefingSound(step);
-
-        yield return new WaitForSeconds(26);
+        yield return new WaitForSeconds(briefingAudio[step].length);
         sfxSource.PlayOneShot(sfx[0]);
 
         for (int i = 0; i <= 25; i++)
@@ -94,16 +98,16 @@ public class ScenerioScript : MonoBehaviour
     IEnumerator Skenario2()
     {
         textInformation.text = "Ayo segera menuju ke meja untuk berlindung.";
-        keyboardController.enabled = true;
-        vrController.enabled = true;
-        papanTulis.useGravity = true;
-        lemari.AddForce(Vector3.back * 700);
 
         BriefingSound(step);
-        arrowSkenario2.SetActive(true);
-
         yield return new WaitForSeconds(briefingAudio[step].length);
-        StartCoroutine(skenarioList[step]);
+        keyboardController.enabled = true;
+        vrController.enabled = true;
+        arrow.SetActive(true);
+        arrowAnim.Play("Skenario2");
+        papanTulis.useGravity = true;
+        lemari.AddForce(Vector3.back * 700);
+        step++;
     }
 
     // Skenario 3
@@ -111,8 +115,9 @@ public class ScenerioScript : MonoBehaviour
     IEnumerator Skenario3()
     {
         textInformation.text = "Harap tetap berlindung di bawah meja, dan jangan keluar sampai Anda benar-benar yakin guncangan gempa telah berhenti sepenuhnya.";
-        BriefingSound(step);
-        arrowSkenario2.SetActive(true);
+        keyboardController.enabled = false;
+        vrController.enabled = false;
+        arrow.SetActive(true);
 
         // Mulai efek lampu kedap-kedip
         StartCoroutine(LampFlickerEffect());
@@ -121,9 +126,9 @@ public class ScenerioScript : MonoBehaviour
         StartCoroutine(ShakeWithForce(papanTulis));
         StartCoroutine(ShakeWithForce(lemari));
         StartCoroutine(ShakeWithForce(meja));
+        BriefingSound(step);
 
         yield return new WaitForSeconds(briefingAudio[step].length);
-
         StopAllCoroutines();
 
         // Pastikan lampu tetap menyala setelah efek berhenti
@@ -162,17 +167,34 @@ public class ScenerioScript : MonoBehaviour
     // Skenario 4
     IEnumerator Skenario4()
     {
-        textInformation.text = "Gempa sudah mulai mereda, Anda dapat perlahan-lahan keluar dari kelas dengan hati-hati.";
-        yield return new WaitForSeconds(5f);
+        arrow.SetActive(true);
+        arrowAnim.Play("Skenario4");
+        textInformation.text = "Gempa sudah mulai mereda, Anda dapat perlahan-lahan keluar dari kelas dan berusahan turun dengan hati-hati.";
         BriefingSound(step);
-
-        // Setelah skenario selesai, kita bisa mematikan panah penunjuk arah jika diperlukan
-        arrowSkenario2.SetActive(false);
-
+        yield return new WaitForSeconds(briefingAudio[step].length);
+        keyboardController.enabled = true;
+        vrController.enabled = true;
         // Menonaktifkan collider agar pemain bisa keluar
         keluarKelas.enabled = false;
+        step++;
+    }
 
-        yield return new WaitForSeconds(briefingAudio[step].length);        
+    IEnumerator Skenario5()
+    {
+        BriefingSound(step);
+        arrow.SetActive(true);
+        arrowAnim.Play("Skenario6");
+        textInformation.text = "Segera menuju ke lapangan terbuka yang jauh dari bangunan untuk menghindari bahaya tertimpa reruntuhan.";
+        yield return new WaitForSeconds(5f);
+        step++;
+    }
+
+    IEnumerator Skenario6()
+    {
+        menuPanel.SetActive(true);
+        BriefingSound(step);       
+        textInformation.text = "Selamat simulasi telah berakhir, anda bisa mengulang simulasi atau keluar dari aplikasi";
+        yield return new WaitForSeconds(5f);
     }
 
 
@@ -185,9 +207,9 @@ public class ScenerioScript : MonoBehaviour
     IEnumerator BreakSkenarioIenumerator()
     {
         briefSource.Stop();
-        briefSource.PlayOneShot(briefingAudio[5]);
+        briefSource.PlayOneShot(briefingAudio[6]);
 
-        yield return new WaitForSeconds(briefingAudio[5].length);
+        yield return new WaitForSeconds(briefingAudio[6].length);
 
         Scene activeScene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(activeScene.name);

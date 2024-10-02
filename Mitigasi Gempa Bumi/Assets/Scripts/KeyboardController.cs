@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.SceneManagement;
 public class KeyboardController : MonoBehaviour
 {
     public float walkSpeed = 5f; // Kecepatan jalan biasa
@@ -9,7 +9,6 @@ public class KeyboardController : MonoBehaviour
     public float jumpHeight = 2f; // Ketinggian lompat
     public float crouchSpeed = 2.5f; // Kecepatan saat menunduk
     public float mouseSensitivity = 2f; // Sensitivitas mouse
-    public float crouchHeight = 1f; // Tinggi karakter saat menunduk
     private float originalHeight; // Tinggi asli karakter
 
     private CharacterController controller;
@@ -17,6 +16,9 @@ public class KeyboardController : MonoBehaviour
     private float gravity = -9.81f;
     private Vector3 velocity;
 
+    public Camera playerCamera;
+    private float originalCameraHeight;
+    [SerializeField] private Animator playerAnimator;
     void Start()
     {
         // Ambil referensi ke komponen CharacterController
@@ -26,7 +28,7 @@ public class KeyboardController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
 
         // Simpan tinggi asli karakter
-        originalHeight = controller.height;
+        originalCameraHeight = playerCamera.transform.localPosition.y;
     }
 
     void Update()
@@ -102,12 +104,13 @@ public class KeyboardController : MonoBehaviour
         // Cek apakah tombol Left Control ditekan untuk menunduk
         if (Input.GetKeyDown(KeyCode.LeftControl))
         {
-            controller.height = crouchHeight; // Ubah tinggi karakter menjadi lebih pendek
+            // Pindahkan posisi kamera lebih rendah untuk efek menunduk
+            playerCamera.transform.localPosition = new Vector3(0, originalCameraHeight - 2, 0);
         }
-        // Kembalikan tinggi karakter saat tombol dilepas
+        // Kembalikan posisi kamera saat tombol dilepas
         if (Input.GetKeyUp(KeyCode.LeftControl))
         {
-            controller.height = originalHeight; // Kembalikan tinggi ke ukuran semula
+            playerCamera.transform.localPosition = new Vector3(0, originalCameraHeight, 0);
         }
     }
 
@@ -115,21 +118,53 @@ public class KeyboardController : MonoBehaviour
     {
         if (other.CompareTag("Table")) // Menggunakan CompareTag lebih efisien daripada "other.tag == 'Table'"
         {
-            ScenerioScript.instance.step = 2;
-            controller.height = crouchHeight;
+            ScenerioScript.instance.StartCoroutine(ScenerioScript.instance.skenarioList[ScenerioScript.instance.step]);
+            playerCamera.transform.localPosition = new Vector3(0, originalCameraHeight - 2, 0);
+            playerAnimator.SetBool("IsProne", true);
+        }
+        if (other.CompareTag("Skenario")) 
+        {
+            ScenerioScript.instance.StartCoroutine(ScenerioScript.instance.skenarioList[ScenerioScript.instance.step]);
             print("test");
         }
         if (other.CompareTag("Breaks")) // Menggunakan CompareTag lebih efisien daripada "other.tag == 'Table'"
         {
             ScenerioScript.instance.BreakSkenario();
         }
+        if (other.CompareTag("Reload")) // Menggunakan CompareTag lebih efisien daripada "other.tag == 'Table'"
+        {
+            ReloadApps();
+        }
+        if (other.CompareTag("Quit")) // Menggunakan CompareTag lebih efisien daripada "other.tag == 'Table'"
+        {
+            QuitApps();
+        }
+
     }
     private void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("Table")) // Menggunakan CompareTag lebih efisien daripada "other.tag == 'Table'"
         {
-            controller.height = originalHeight;
+            playerCamera.transform.localPosition = new Vector3(0, originalCameraHeight, 0);
+            playerAnimator.SetBool("IsProne", false);
             print("test");
         }
+    }
+
+    private void ReloadApps()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(activeScene.name);
+    }
+
+    private void QuitApps()
+    {
+        // Jika dijalankan di Editor, tampilkan log bahwa keluar aplikasi dipanggil
+#if UNITY_EDITOR
+        Debug.Log("Keluar dari aplikasi (tidak berfungsi di Editor).");
+#else
+            // Keluar dari aplikasi jika sudah di-build
+            Application.Quit();
+#endif
     }
 }

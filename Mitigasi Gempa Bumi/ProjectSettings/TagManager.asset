@@ -6,6 +6,9 @@ TagManager:
   tags:
   - Table
   - Breaks
+  - Skenario
+  - Reload
+  - Exit
   layers:
   - Default
   - TransparentFX
