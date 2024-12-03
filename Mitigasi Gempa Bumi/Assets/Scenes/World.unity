@@ -1770,6 +1770,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 126a1c4aa01296a4fb4e2284d214972c, type: 3}
   sfx:
   - {fileID: 8300000, guid: 76ff4c2ec62e61d458562ad880f3c03e, type: 3}
+  - {fileID: 8300000, guid: 382d0c38e54ec2c4ab1be3ddd4ff4077, type: 3}
   keyboardController: {fileID: 20493431}
   vrController: {fileID: 20493436}
   textInformation: {fileID: 738458472}
@@ -5709,7 +5710,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1538351224
 Transform:
   m_ObjectHideFlags: 0

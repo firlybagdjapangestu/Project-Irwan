@@ -60,19 +60,7 @@ public class ScenerioScript : MonoBehaviour
     }
 
     // Efek gempa dengan menggerakkan bangunan
-    void EarthquakeEffect()
-    {
-        if (schoolBuilding != null)
-        {
-            originalPosition = schoolBuilding.transform.position;
-            float offsetX = Mathf.PingPong(Time.time * shakeSpeed, shakeAmount * 2) - shakeAmount;
-            schoolBuilding.transform.position = new Vector3(originalPosition.x + offsetX, originalPosition.y, originalPosition.z);
-        }
-        else
-        {
-            Debug.LogError("GameObject sekolah belum ditetapkan!");
-        }
-    }
+    
 
     // Skenario 1
     IEnumerator Skenario1()
@@ -82,6 +70,8 @@ public class ScenerioScript : MonoBehaviour
         vrController.enabled = false;
         BriefingSound(step);
         yield return new WaitForSeconds(briefingAudio[step].length);
+        VibrateForDuration(sfx[0].length);
+        StartCoroutine(PlaySFXForDuration(sfx[1], sfx[0].length));
         sfxSource.PlayOneShot(sfx[0]);
 
         for (int i = 0; i <= 25; i++)
@@ -101,8 +91,8 @@ public class ScenerioScript : MonoBehaviour
 
         BriefingSound(step);
         yield return new WaitForSeconds(briefingAudio[step].length);
-        keyboardController.enabled = true;
         vrController.enabled = true;
+        keyboardController.enabled = true;
         arrow.SetActive(true);
         arrowAnim.Play("Skenario2");
         papanTulis.useGravity = true;
@@ -126,9 +116,14 @@ public class ScenerioScript : MonoBehaviour
         StartCoroutine(ShakeWithForce(papanTulis));
         StartCoroutine(ShakeWithForce(lemari));
         StartCoroutine(ShakeWithForce(meja));
+        VibrateForDuration(briefingAudio[step].length);
+
+        // Mulai memutar SFX selama briefing audio berlangsung
+        StartCoroutine(PlaySFXForDuration(sfx[1], briefingAudio[step].length));
         BriefingSound(step);
 
         yield return new WaitForSeconds(briefingAudio[step].length);
+
         StopAllCoroutines();
 
         // Pastikan lampu tetap menyala setelah efek berhenti
@@ -138,30 +133,7 @@ public class ScenerioScript : MonoBehaviour
         StartCoroutine(skenarioList[step]);
     }
 
-    // Coroutine untuk mengguncangkan objek menggunakan AddForce
-    IEnumerator ShakeWithForce(Rigidbody objRigidbody)
-    {
-        while (true)
-        {
-            // Tambahkan gaya acak di sumbu X dan Z untuk mengguncangkan objek
-            Vector3 randomForce = new Vector3(Random.Range(-200f, 200f), 0, Random.Range(-200f, 200f));
-            objRigidbody.AddForce(randomForce);
 
-            yield return new WaitForSeconds(0.2f); // Waktu jeda antara tiap gaya yang diterapkan
-        }
-    }
-
-
-    // Coroutine untuk membuat lampu berkedip
-    IEnumerator LampFlickerEffect()
-    {
-        while (true)
-        {
-            print("Lampu Berkedip");
-            pointLight.enabled = !pointLight.enabled; // Ganti status lampu antara hidup dan mati
-            yield return new WaitForSeconds(Random.Range(0.1f, 0.5f)); // Waktu acak antara kedipan
-        }
-    }
 
     // Skenario 4
     // Skenario 4
@@ -172,8 +144,8 @@ public class ScenerioScript : MonoBehaviour
         textInformation.text = "Gempa sudah mulai mereda, Anda dapat perlahan-lahan keluar dari kelas dan berusahan turun dengan hati-hati.";
         BriefingSound(step);
         yield return new WaitForSeconds(briefingAudio[step].length);
-        keyboardController.enabled = true;
         vrController.enabled = true;
+        keyboardController.enabled = true;
         // Menonaktifkan collider agar pemain bisa keluar
         keluarKelas.enabled = false;
         step++;
@@ -213,5 +185,71 @@ public class ScenerioScript : MonoBehaviour
 
         Scene activeScene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(activeScene.name);
+    }
+
+    // Coroutine untuk mengguncangkan objek menggunakan AddForce
+    IEnumerator ShakeWithForce(Rigidbody objRigidbody)
+    {
+        while (true)
+        {
+            // Tambahkan gaya acak di sumbu X dan Z untuk mengguncangkan objek
+            Vector3 randomForce = new Vector3(Random.Range(-200f, 200f), 0, Random.Range(-200f, 200f));
+            objRigidbody.AddForce(randomForce);
+
+            yield return new WaitForSeconds(0.2f); // Waktu jeda antara tiap gaya yang diterapkan
+        }
+    }
+
+    public void VibrateForDuration(float duration)
+    {
+        StartCoroutine(VibrateCoroutine(duration));
+    }
+
+    private IEnumerator VibrateCoroutine(float duration)
+    {
+        float elapsedTime = 0f;
+        while (elapsedTime < duration)
+        {
+            Handheld.Vibrate();
+            yield return new WaitForSeconds(0.1f); // Set interval kecil untuk membuat efek kontinu
+            elapsedTime += 0.1f;
+        }
+    }
+
+
+    // Coroutine untuk membuat lampu berkedip
+    IEnumerator LampFlickerEffect()
+    {
+        while (true)
+        {
+            print("Lampu Berkedip");
+            pointLight.enabled = !pointLight.enabled; // Ganti status lampu antara hidup dan mati
+            yield return new WaitForSeconds(Random.Range(0.1f, 0.5f)); // Waktu acak antara kedipan
+        }
+    }
+
+    void EarthquakeEffect()
+    {
+        if (schoolBuilding != null)
+        {
+            originalPosition = schoolBuilding.transform.position;
+            float offsetX = Mathf.PingPong(Time.time * shakeSpeed, shakeAmount * 2) - shakeAmount;
+            schoolBuilding.transform.position = new Vector3(originalPosition.x + offsetX, originalPosition.y, originalPosition.z);
+        }
+        else
+        {
+            Debug.LogError("GameObject sekolah belum ditetapkan!");
+        }
+    }
+
+    private IEnumerator PlaySFXForDuration(AudioClip clip, float duration)
+    {
+        float elapsedTime = 0f;
+        while (elapsedTime < duration)
+        {
+            sfxSource.PlayOneShot(clip);
+            yield return new WaitForSeconds(clip.length);
+            elapsedTime += clip.length;
+        }
     }
 }
