@@ -180,7 +180,7 @@ public class ScenerioScript : MonoBehaviour
     {
         briefSource.Stop();
         briefSource.PlayOneShot(briefingAudio[6]);
-
+        textInformation.text = "Anda melanggar langkah langkah yang telah ditentukan, silahkan mengulangi simulasi";
         yield return new WaitForSeconds(briefingAudio[6].length);
 
         Scene activeScene = SceneManager.GetActiveScene();
